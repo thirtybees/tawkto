@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Tawk.to
  *
@@ -17,89 +16,163 @@
  * @license     http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-if (!defined('_PS_VERSION_')) {
-	exit;
+if (!defined('_TB_VERSION_')) {
+    exit;
 }
 
-class TawkTo extends Module {
-	const TAWKTO_WIDGET_PAGE_ID = 'TAWKTO_WIDGET_PAGE_ID';
-	const TAWKTO_WIDGET_WIDGET_ID = 'TAWKTO_WIDGET_WIDGET_ID';
+/**
+ * Class TawkTo
+ */
+class TawkTo extends Module
+{
+    const TAWKTO_WIDGET_PAGE_ID = 'TAWKTO_WIDGET_PAGE_ID';
+    const TAWKTO_WIDGET_WIDGET_ID = 'TAWKTO_WIDGET_WIDGET_ID';
 
-	public function __construct() {
-		$this->name = 'tawkto';
-		$this->tab = 'front_office_features';
-		$this->version = '1.0';
-		$this->author = 'tawk.to';
-		$this->need_instance = 0;
-		$this->ps_versions_compliancy = array('min' => '1.5', 'max' => '1.6');
-		$this->dependencies = array('blockcart');
+    /**
+     * TawkTo constructor.
+     */
+    public function __construct()
+    {
+        $this->name = 'tawkto';
+        $this->tab = 'front_office_features';
+        $this->version = '1.0.0';
+        $this->author = 'thirty bees';
+        $this->need_instance = 0;
+        $this->ps_versions_compliancy = ['min' => '1.0', 'max' => '1.2'];
+        $this->tb_versions_compliancy = '>= 1.0.0';
 
-		parent::__construct();
+        parent::__construct();
 
-		$this->displayName = $this->l('Tawk.to');
-		$this->description = $this->l('Tawk.to live chat integration.');
+        $this->displayName = $this->l('Tawk.to');
+        $this->description = $this->l('Tawk.to live chat integration.');
+    }
 
-		$this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
+    /**
+     * Install the module
+     *
+     * @return bool
+     */
+    public function install()
+    {
+        return parent::install() && $this->registerHook('footer');
+    }
 
-		if (!Configuration::get('MYMODULE_NAME'))
-		$this->warning = $this->l('No name provided');
-	}
+    /**
+     * Uninstall the module
+     *
+     * @return bool
+     */
+    public function uninstall()
+    {
+        Configuration::deleteByName(static::TAWKTO_WIDGET_PAGE_ID);
+        Configuration::deleteByName(static::TAWKTO_WIDGET_WIDGET_ID);
 
-	public function install() {
-		return parent::install() && $this->registerHook('footer') && $this->installTab();
-	}
+        return parent::uninstall();
+    }
 
-	private function installTab() {
-		$tab = new Tab();
-		$tab->active = 1;
-		$tab->class_name = 'AdminTawkto';
-		$tab->name = array();
+    /**
+     * Module configuration page HTML
+     *
+     * @return string
+     */
+    public function getContent()
+    {
+        $this->context->smarty->assign([
+            'iframe_url' => $this->getIframeUrl(),
+            'base_url'   => $this->getBaseUrl(),
+            'module_url' => $this->context->link->getAdminLink('AdminModules', true).'&'.http_build_query([
+                'configure' => $this->name,
+                'tab_module' => $this->tab,
+                'module_name' => $this->name,
+            ]),
+        ]);
 
-		foreach (Language::getLanguages(true) as $lang) {
-			$tab->name[$lang['id_lang']] = 'Tawk.to';
-		}
+        return $this->display(__FILE__, 'views/templates/admin/view.tpl');
+    }
 
-		$tab->id_parent = (int)Tab::getIdFromClassName('AdminAdmin');
-		$tab->module = $this->name;
+    /**
+     * Display footer
+     *
+     * @return string
+     */
+    public function hookDisplayFooter()
+    {
+        $pageId = Configuration::get(static::TAWKTO_WIDGET_PAGE_ID);
+        $widgetId = Configuration::get(static::TAWKTO_WIDGET_WIDGET_ID);
 
-		return $tab->add();
-	}
+        if (empty($pageId) || empty($widgetId)) {
+            return '';
+        }
 
-	public function hookDisplayFooter() {
-		$pageId = Configuration::get(self::TAWKTO_WIDGET_PAGE_ID);
-		$widgetId = Configuration::get(self::TAWKTO_WIDGET_WIDGET_ID);
+        $this->context->smarty->assign(
+            [
+                'widget_id' => $widgetId,
+                'page_id'   => $pageId,
+            ]
+        );
 
-		if(empty($pageId) || empty($widgetId)) {
-			return '';
-		}
+        return $this->display(__FILE__, 'widget.tpl');
+    }
 
-		$this->context->smarty->assign(array(
-			'widget_id' => $widgetId,
-			'page_id'   => $pageId
-		));
+    /**
+     * Ajax process - set widget
+     */
+    public function ajaxProcessSetWidget()
+    {
+        if (!isset($_POST['pageId']) || !isset($_POST['widgetId']) || !static::idsAreCorrect($_POST['pageId'], $_POST['widgetId'])) {
+            die(json_encode(['success' => false]));
+        }
 
-		return $this->display(__FILE__, 'widget.tpl');
-	}
+        Configuration::updateValue(static::TAWKTO_WIDGET_PAGE_ID, $_POST['pageId']);
+        Configuration::updateValue(static::TAWKTO_WIDGET_WIDGET_ID, $_POST['widgetId']);
 
-	public function uninstall() {
-		Configuration::deleteByName(self::TAWKTO_WIDGET_PAGE_ID);
-		Configuration::deleteByName(self::TAWKTO_WIDGET_WIDGET_ID);
+        die(json_encode(['success' => true]));
+    }
 
-		return parent::uninstall() && $this->uninstallTab();
-	}
+    /**
+     * Ajax process - remove widget
+     */
+    public function ajaxProcessRemoveWidget()
+    {
+        Configuration::deleteByName(static::TAWKTO_WIDGET_PAGE_ID);
+        Configuration::deleteByName(static::TAWKTO_WIDGET_WIDGET_ID);
 
-	public function uninstallTab() {
-		$id_tab = (int)Tab::getIdFromClassName('AdminTawkto');
+        die(json_encode(['success' => true]));
+    }
 
-		if ($id_tab) {
-			$tab = new Tab($id_tab);
-			return $tab->delete();
-		} else {
-			return false;
-		}
-	}
+    /**
+     * Get iframe URL
+     *
+     * @return string
+     */
+    private function getIframeUrl()
+    {
+        return $this->getBaseUrl()
+            .'/generic/widgets'
+            .'?currentPageId='.Configuration::get(static::TAWKTO_WIDGET_PAGE_ID)
+            .'&currentWidgetId='.Configuration::get(static::TAWKTO_WIDGET_WIDGET_ID);
+    }
 
-	public function getContent() {
-		Tools::redirectAdmin($this->context->link->getAdminLink('AdminTawkto'));
-	}
+    /**
+     * Get base url
+     *
+     * @return string
+     */
+    private function getBaseUrl()
+    {
+        return 'https://plugins.tawk.to';
+    }
+
+    /**
+     * Validate IDs
+     *
+     * @param string $pageId
+     * @param string $widgetId
+     *
+     * @return bool
+     */
+    private static function idsAreCorrect($pageId, $widgetId)
+    {
+        return preg_match('/^[0-9A-Fa-f]{24}$/', $pageId) === 1 && preg_match('/^[a-z0-9]{1,50}$/i', $widgetId) === 1;
+    }
 }
