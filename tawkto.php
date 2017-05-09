@@ -35,11 +35,10 @@ class TawkTo extends Module
     {
         $this->name = 'tawkto';
         $this->tab = 'front_office_features';
-        $this->version = '1.0.0';
+        $this->version = '1.0.1';
         $this->author = 'thirty bees';
         $this->need_instance = 0;
-        $this->ps_versions_compliancy = ['min' => '1.0', 'max' => '1.2'];
-        $this->tb_versions_compliancy = '>= 1.0.0';
+        $this->tb_versions_compliancy = '1.0.x';
 
         parent::__construct();
 
