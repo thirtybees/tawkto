@@ -42,8 +42,8 @@ class TawkTo extends Module
 
         parent::__construct();
 
-        $this->displayName = $this->l('Tawk.to');
-        $this->description = $this->l('Tawk.to live chat integration.');
+        $this->displayName = $this->l('tawk.to');
+        $this->description = $this->l('tawk.to live chat integration.');
     }
 
     /**
