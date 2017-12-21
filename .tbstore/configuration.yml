@@ -1,0 +1,13 @@
+module_name: Tawk.to Module
+compatible_versions: 1.0.0+
+author: thirty bees
+category: front office
+tags:
+  - chat
+  - live chat
+  - tawkto
+description_short: Our Tawk.to module allows you to add Tawk.to live chat to your website.
+description: description.md
+images:
+  - image-1.png
+license: MIT
