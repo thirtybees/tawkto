@@ -20,9 +20,9 @@
 <script type="text/javascript">
   (function () {
     var currentHost = window.location.protocol + "//" + window.location.host,
-      url = "{$iframe_url|escape:'javascript':'UTF-8'}&parentDomain=" + currentHost,
-      baseUrl = '{$base_url|escape:'javascript':'UTF-8'}',
-      module_url = '{$module_url|escape:'javascript':'UTF-8'}';
+      url = "{$iframe_url|escape:'javascript'}&parentDomain=" + currentHost,
+      baseUrl = '{$base_url|escape:'javascript'}',
+      module_url = '{$module_url|escape:'javascript'}';
       {literal}
     $('#tawkIframe').attr('src', url);
 

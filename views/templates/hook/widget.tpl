@@ -28,8 +28,8 @@
   })();
   {if $cookie->email != ''}
     $_Tawk_API.visitor = {
-      name  : '{$cookie->customer_firstname}',
-      email : '{$cookie->email}'
+      name  : '{$cookie->customer_firstname|escape:'javascript'}',
+      email : '{$cookie->email|escape:'javascript'}'
     };
   {/if}
 </script>
