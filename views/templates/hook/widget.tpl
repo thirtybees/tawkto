@@ -26,5 +26,11 @@
     s1.setAttribute('crossorigin', '*');
     s0.parentNode.insertBefore(s1, s0);
   })();
+  {if $cookie->email != ''}
+    $_Tawk_API.visitor = {
+      name  : '{$cookie->customer_firstname}',
+      email : '{$cookie->email}'
+    };
+  {/if}
 </script>
 <!--End of Tawk.to Script-->
